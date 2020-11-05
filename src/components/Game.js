@@ -1,11 +1,14 @@
-import React from "react";
+import React , {useContext} from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
-import useInterval from "../hooks/use-interval.hook";
+
 
 import cookieSrc from "../cookie.svg";
 import Item from "./Item";
+
+import { GameContext } from "./GameContext";
+
 
 const items = [
   { id: "cursor", name: "Cursor", cost: 10, value: 1 },
@@ -13,34 +16,24 @@ const items = [
   { id: "farm", name: "Farm", cost: 1000, value: 80 },
 ];
 
-const calculateCookiesPerSecond = (purchasedItems) => {
-  return Object.keys(purchasedItems).reduce((acc, itemId) => {
-    const numOwned = purchasedItems[itemId];
-    const item = items.find((item) => item.id === itemId);
-    const value = item.value;
-
-    return acc + value * numOwned;
-  }, 0);
-};
 
 const Game = () => {
-  const [numCookies, setNumCookies] = React.useState(1000);
 
-  const [purchasedItems, setPurchasedItems] = React.useState({
-    cursor: 0,
-    grandma: 0,
-    farm: 0,
-  });
+
+  const {
+    numCookies,
+    setNumCookies,
+    purchasedItems,
+    setPurchasedItems,
+    cookiesPerSecond,
+  } = useContext(GameContext);
 
   const incrementCookies = () => {
     setNumCookies((c) => c + 1);
+
   };
 
-  useInterval(() => {
-    const numOfGeneratedCookies = calculateCookiesPerSecond(purchasedItems);
 
-    setNumCookies(numCookies + numOfGeneratedCookies);
-  }, 1000);
 
   React.useEffect(() => {
     document.title = `${numCookies} cookies - Cookie Clicker Workshop`;
@@ -64,12 +57,32 @@ const Game = () => {
     };
   });
 
+
+  React.useEffect(() => {
+    const handleKeydown = (ev) => {
+      if (ev.code === "Space") {
+        incrementCookies();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeydown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    };
+  });
+
+
+
+
+
+
   return (
     <Wrapper>
       <GameArea>
         <Indicator>
           <Total>{numCookies} cookies</Total>
-          <strong>{calculateCookiesPerSecond(purchasedItems)}</strong> cookies
+          <strong>{cookiesPerSecond}</strong> cookies
           per second
         </Indicator>
         <Button onClick={incrementCookies}>
